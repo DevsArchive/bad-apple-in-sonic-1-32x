@@ -669,7 +669,7 @@ SlavePWMInt:
 	mov.l	@r2,r1
 	mov.b	@r1,r3
 	extu.b	r3,r3
-	shll2	r3
+	shll	r3
 	add	#1,r1
 	
 	mov.l	#CARTRIDGE+$178000,r0		; Check if about halfway through

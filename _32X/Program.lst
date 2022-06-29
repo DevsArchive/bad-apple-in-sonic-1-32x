@@ -791,7 +791,7 @@
 06000682 6122                 	mov.l	@r2,r1
 06000684 6310                 	mov.b	@r1,r3
 06000686 633C                 	extu.b	r3,r3
-06000688 4308                 	shll2	r3
+06000688 4300                 	shll	r3
 0600068A 7101                 	add	#1,r1
 0600068C                      	
 0600068C D000                 	mov.l	#CARTRIDGE+$178000,r0		; Check if about halfway through
