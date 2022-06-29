@@ -1,6 +1,6 @@
 @echo off
 
-set PAL=1
+set PAL=0
 
 IF EXIST s1built.32x move /Y s1built.32x s1built.prev.32x >NUL
 asmsh /k /p /o psh2,#+ /e PAL=%PAL% _32X/Program.asm,_32X/Program.bin, ,_32X/Program.lst

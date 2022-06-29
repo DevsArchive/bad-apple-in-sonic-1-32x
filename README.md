@@ -2,7 +2,7 @@
 Exactly as described. Bad Apple overlayed on top of Sonic 1 via the 32X.
 
 ## Note
-This makes use of the Sega/"Super Street Fighter 2" mapper. The only emulator that supports this configuration is PicoDrive. The version on RetroArch will run this. The version on BizHawk as of June 2022 will NOT. I did my testing of this with a version of Ares that I made had basic support for the mapper. I did submit a PR for preliminary support, so hopefully that'll go through.
+This makes use of the Sega/"Super Street Fighter 2" mapper. The only emulator that supports this configuration is PicoDrive. The version on RetroArch will run this. The version on BizHawk as of June 2022 will NOT. I did my testing of this with a version of Ares that I made had basic support for the mapper. I did submit a PR for preliminary support, so hopefully that'll go through. Running this on any other emulator with 32X support will either result in the ROM not loading or a REALLY LOUD sound while it loops on the first several seconds of the animation.
 
 I would not be surprised if this doesn't work on hardware. It's untested and I'm a noob. Pointers to issues found would be appreciated, though!
 
