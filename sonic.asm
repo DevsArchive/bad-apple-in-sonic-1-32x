@@ -105,10 +105,10 @@ vblankAddr	EQU	vblankJmp+2
 ; ROM header
 ; ---------------------------------------------------------------------------
 		
-Console:	dc.b "SEGA 32X        " ; Hardware system ID (Console name)
+Console:	dc.b "SEGA SSF        " ; Hardware system ID (Console name)
 Date:		dc.b "(C)SEGA 1991.APR" ; Copyright holder and release date (generally year)
 Title_Local:	dc.b "SUPER STREET FIGHTER2 The New Challengers       " ; Domestic name
-Title_Int:	dc.b "SONIC THE               HEDGEHOG                " ; International name
+Title_Int:	dc.b "SUPER STREET FIGHTER2 The New Challengers       " ; International name
 Serial:		if Revision=0
 		dc.b "GM 00001009-00"   ; Serial/version number (Rev 0)
 		else
