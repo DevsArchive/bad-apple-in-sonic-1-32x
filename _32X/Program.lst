@@ -307,224 +307,230 @@
 060001C4                      ; ---------------------------------------------------------------------------
 060001C4                      
 060001C4                      @Continue:
-060001C4 4001                 	shlr	r0				; Copy frame data
-060001C6                      	
-060001C6                      @Copy:
-060001C6 6415                 	mov.w	@r1+,r4
-060001C8 2341                 	mov.w	r4,@r3
-060001CA 7302                 	add	#2,r3
-060001CC 4010                 	dt	r0
-060001CE 8BFA                 	bf	@Copy
-060001D0                      	
-060001D0 D000                 	mov.l	#cartPtr,r0			; Update cartridge pointer
-060001D2 2012                 	mov.l	r1,@r0
-060001D4                      
-060001D4 B000                 	bsr	MasterUpdatePal			; Update palette
-060001D6 0009                 	nop
+060001C4 6403                 	mov	r0,r4				; Get frame data length in words
+060001C6 4401                 	shlr	r4
+060001C8                      	
+060001C8                      @Copy:
+060001C8                      @WaitRV:
+060001C8 C407                 	mov.b	@(DREQCTRL+1,gbr),r0		; Make sure RV is not set
+060001CA C801                 	tst	#1,r0
+060001CC 8BFC                 	bf	@WaitRV
+060001CE                      
+060001CE 6015                 	mov.w	@r1+,r0				; Copy frame data
+060001D0 2301                 	mov.w	r0,@r3
+060001D2 7302                 	add	#2,r3
+060001D4 4410                 	dt	r4
+060001D6 8BF7                 	bf	@Copy
 060001D8                      	
-060001D8 E003                 	mov	#%00000011,r0			; Set bitmap mode
-060001DA 80E1                 	mov.b	r0,@(BMPMODE,r14)
-060001DC                      	
-060001DC 84EB                 	mov.b	@(FRAMECTRL,r14),r0		; Swap frame buffer
-060001DE 6107                 	not	r0,r1
-060001E0 6013                 	mov	r1,r0
-060001E2 80EB                 	mov.b	r0,@(FRAMECTRL,r14)
+060001D8 D000                 	mov.l	#cartPtr,r0			; Update cartridge pointer
+060001DA 2012                 	mov.l	r1,@r0
+060001DC                      
+060001DC B000                 	bsr	MasterUpdatePal			; Update palette
+060001DE 0009                 	nop
+060001E0                      	
+060001E0 E003                 	mov	#%00000011,r0			; Set bitmap mode
+060001E2 80E1                 	mov.b	r0,@(BMPMODE,r14)
 060001E4                      	
-060001E4 D100                 	mov.l	#packetFrames,r1		; Decrement packet frames left
-060001E6 6012                 	mov.l	@r1,r0
-060001E8 4010                 	dt	r0
-060001EA 2102                 	mov.l	r0,@r1
+060001E4 84EB                 	mov.b	@(FRAMECTRL,r14),r0		; Swap frame buffer
+060001E6 6107                 	not	r0,r1
+060001E8 6013                 	mov	r1,r0
+060001EA 80EB                 	mov.b	r0,@(FRAMECTRL,r14)
 060001EC                      	
-060001EC AFBD                 	bra	MasterLoop			; Loop
-060001EE 0009                 	nop
-060001F0                      
-060001F0                      ; ---------------------------------------------------------------------------
-060001F0                      
-060001F0                      @NoNewPacket:
-060001F0 B000                 	bsr	MasterUpdatePal			; Update palette
-060001F2 0009                 	nop
+060001EC D100                 	mov.l	#packetFrames,r1		; Decrement packet frames left
+060001EE 6012                 	mov.l	@r1,r0
+060001F0 4010                 	dt	r0
+060001F2 2102                 	mov.l	r0,@r1
 060001F4                      	
 060001F4 AFB9                 	bra	MasterLoop			; Loop
 060001F6 0009                 	nop
 060001F8                      
 060001F8                      ; ---------------------------------------------------------------------------
-060001F8                      ; Update palette
-060001F8                      ; ---------------------------------------------------------------------------
 060001F8                      
-060001F8                      MasterUpdatePal:
-060001F8                      @WaitVBlank:
-060001F8 84EA                 	mov.b	@(VDPSTAT,r14),r0		; Wait for V-BLANK
-060001FA C880                 	tst	#$80,r0
-060001FC 89FC                 	bt	@WaitVBlank
-060001FE                      	
-060001FE D100                 	mov.l	#PALETTE,r1			; Update palette according to frame
-06000200 D000                 	mov	#256-1,r0
-06000202                      	
-06000202                      @SetPalLoop:
-06000202 9300                 	mov.w	#$7FFF,r3
-06000204 2028                 	tst	r2,r0
-06000206 8900                 	bt	@SetColor
-06000208 9300                 	mov.w	#$8000,r3
-0600020A                      
-0600020A                      @SetColor:
-0600020A 2131                 	mov.w	r3,@r1
-0600020C 7102                 	add	#2,r1
-0600020E                      	
-0600020E 4010                 	dt	r0
-06000210 88FF                 	cmp/eq	#-1,r0
-06000212 8BF6                 	bf	@SetPalLoop
-06000214                      	
-06000214 D100                 	mov.l	#frameCount,r1			; Increment frame count
-06000216 6012                 	mov.l	@r1,r0
-06000218 7001                 	add	#1,r0
-0600021A 2102                 	mov.l	r0,@r1
-0600021C                      
-0600021C 000B                 	rts
-0600021E 0009                 	nop
-06000220                      
-06000220                      ; ---------------------------------------------------------------------------
-06000220                      ; Data
-06000220                      ; ---------------------------------------------------------------------------
-06000220                      
-06000220 0000 0000 0000    +  	lits
-06000260                      	
-06000260                      ; Frame count
-06000260                      frameCount:
-06000260 0000 0000            	dc.l	0
-06000264                      	
-06000264                      ; Packet frames remaining
-06000264                      packetFrames:
-06000264 0000 0000            	dc.l	0
+060001F8                      @NoNewPacket:
+060001F8 B000                 	bsr	MasterUpdatePal			; Update palette
+060001FA 0009                 	nop
+060001FC                      	
+060001FC AFB5                 	bra	MasterLoop			; Loop
+060001FE 0009                 	nop
+06000200                      
+06000200                      ; ---------------------------------------------------------------------------
+06000200                      ; Update palette
+06000200                      ; ---------------------------------------------------------------------------
+06000200                      
+06000200                      MasterUpdatePal:
+06000200                      @WaitVBlank:
+06000200 84EA                 	mov.b	@(VDPSTAT,r14),r0		; Wait for V-BLANK
+06000202 C880                 	tst	#$80,r0
+06000204 89FC                 	bt	@WaitVBlank
+06000206                      	
+06000206 D100                 	mov.l	#PALETTE,r1			; Update palette according to frame
+06000208 D000                 	mov	#256-1,r0
+0600020A                      	
+0600020A                      @SetPalLoop:
+0600020A 9300                 	mov.w	#$7FFF,r3
+0600020C 2028                 	tst	r2,r0
+0600020E 8900                 	bt	@SetColor
+06000210 9300                 	mov.w	#$8000,r3
+06000212                      
+06000212                      @SetColor:
+06000212 2131                 	mov.w	r3,@r1
+06000214 7102                 	add	#2,r1
+06000216                      	
+06000216 4010                 	dt	r0
+06000218 88FF                 	cmp/eq	#-1,r0
+0600021A 8BF6                 	bf	@SetPalLoop
+0600021C                      	
+0600021C D100                 	mov.l	#frameCount,r1			; Increment frame count
+0600021E 6012                 	mov.l	@r1,r0
+06000220 7001                 	add	#1,r0
+06000222 2102                 	mov.l	r0,@r1
+06000224                      
+06000224 000B                 	rts
+06000226 0009                 	nop
+06000228                      
+06000228                      ; ---------------------------------------------------------------------------
+06000228                      ; Data
+06000228                      ; ---------------------------------------------------------------------------
+06000228                      
+06000228 0000 0000 0000    +  	lits
 06000268                      	
-06000268                      ; Cartridge data pointer
-06000268                      cartPtr:
+06000268                      ; Frame count
+06000268                      frameCount:
 06000268 0000 0000            	dc.l	0
-0600026C                      
-0600026C                      ; Bit masks
-0600026C                      BitMasks:
-0600026C 0101 0202 0404    +  	dc.b	$01, $01, $02, $02, $04, $04, $08, $08
-06000274 1010 2020 4040    +  	dc.b	$10, $10, $20, $20, $40, $40, $80, $80
-0600027C                      
-0600027C                      ; ---------------------------------------------------------------------------
-0600027C                      ; Master error handler
-0600027C                      ; ---------------------------------------------------------------------------
-0600027C                      
-0600027C                      MasterError:
-0600027C AFFE                 	bra	MasterError
-0600027E 0009                 	nop
-06000280                      
-06000280                      ; ---------------------------------------------------------------------------
-06000280                      ; Master IRQ handler
-06000280                      ; ---------------------------------------------------------------------------
-06000280                      
-06000280                      MasterIRQ:
-06000280 2F06                 	mov.l	r0,@-r15			; Save registers
-06000282 2F16                 	mov.l	r1,@-r15
-06000284 2F26                 	mov.l	r2,@-r15
-06000286 2F36                 	mov.l	r3,@-r15
-06000288 2FE6                 	mov.l	r14,@-r15
-0600028A 4F13                 	stc.l	gbr,@-r15
-0600028C 4F22                 	sts.l	pr,@-r15
-0600028E                      	
-0600028E D000                 	mov.l	#SYSREG,r0			; Get system registers
-06000290 401E                 	ldc	r0,gbr
-06000292                      	
-06000292 0002                 	stc	sr,r0				; Get IRQ level
-06000294 4009                 	shlr2	r0
-06000296 4001                 	shlr	r0
-06000298 C91C                 	and	#7<<2,r0
-0600029A CA1C                 	xor	#7<<2,r0
-0600029C 6203                 	mov	r0,r2
+0600026C                      	
+0600026C                      ; Packet frames remaining
+0600026C                      packetFrames:
+0600026C 0000 0000            	dc.l	0
+06000270                      	
+06000270                      ; Cartridge data pointer
+06000270                      cartPtr:
+06000270 0000 0000            	dc.l	0
+06000274                      
+06000274                      ; Bit masks
+06000274                      BitMasks:
+06000274 0101 0202 0404    +  	dc.b	$01, $01, $02, $02, $04, $04, $08, $08
+0600027C 1010 2020 4040    +  	dc.b	$10, $10, $20, $20, $40, $40, $80, $80
+06000284                      
+06000284                      ; ---------------------------------------------------------------------------
+06000284                      ; Master error handler
+06000284                      ; ---------------------------------------------------------------------------
+06000284                      
+06000284                      MasterError:
+06000284 AFFE                 	bra	MasterError
+06000286 0009                 	nop
+06000288                      
+06000288                      ; ---------------------------------------------------------------------------
+06000288                      ; Master IRQ handler
+06000288                      ; ---------------------------------------------------------------------------
+06000288                      
+06000288                      MasterIRQ:
+06000288 2F06                 	mov.l	r0,@-r15			; Save registers
+0600028A 2F16                 	mov.l	r1,@-r15
+0600028C 2F26                 	mov.l	r2,@-r15
+0600028E 2F36                 	mov.l	r3,@-r15
+06000290 2FE6                 	mov.l	r14,@-r15
+06000292 4F13                 	stc.l	gbr,@-r15
+06000294 4F22                 	sts.l	pr,@-r15
+06000296                      	
+06000296 D000                 	mov.l	#SYSREG,r0			; Get system registers
+06000298 401E                 	ldc	r0,gbr
+0600029A                      	
+0600029A 0002                 	stc	sr,r0				; Get IRQ level
+0600029C 4009                 	shlr2	r0
 0600029E 4001                 	shlr	r0
-060002A0 6303                 	mov	r0,r3
-060002A2                      	
-060002A2 D000                 	mov.l	#@IRQTable,r0			; Get IRQ handler
-060002A4 302C                 	add	r2,r0
-060002A6 6202                 	mov.l	@r0,r2
-060002A8                      	
-060002A8 D000                 	mov.l	#$F0,r0				; Mask off IRQs
-060002AA 400E                 	ldc	r0,sr
-060002AC                      	
-060002AC D100                 	mov.l	#FRT,r1				; Toggle FRT bit for future IRQs
-060002AE 8417                 	mov.b	@(TOCR,r1),r0
-060002B0 CA02                 	xor	#2,r0
-060002B2 8017                 	mov.b	r0,@(TOCR,r1)
+060002A0 C91C                 	and	#7<<2,r0
+060002A2 CA1C                 	xor	#7<<2,r0
+060002A4 6203                 	mov	r0,r2
+060002A6 4001                 	shlr	r0
+060002A8 6303                 	mov	r0,r3
+060002AA                      	
+060002AA D000                 	mov.l	#@IRQTable,r0			; Get IRQ handler
+060002AC 302C                 	add	r2,r0
+060002AE 6202                 	mov.l	@r0,r2
+060002B0                      	
+060002B0 D000                 	mov.l	#$F0,r0				; Mask off IRQs
+060002B2 400E                 	ldc	r0,sr
 060002B4                      	
-060002B4 6033                 	mov	r3,r0				; Check IRQ level
-060002B6 E10A                 	mov	#5<<1,r1
-060002B8 3013                 	cmp/ge	r1,r0
-060002BA 8900                 	bt	@IRQDone			; If it's too low, branch
+060002B4 D100                 	mov.l	#FRT,r1				; Toggle FRT bit for future IRQs
+060002B6 8417                 	mov.b	@(TOCR,r1),r0
+060002B8 CA02                 	xor	#2,r0
+060002BA 8017                 	mov.b	r0,@(TOCR,r1)
 060002BC                      	
-060002BC D100                 	mov.l	#VRESINTCLR+SYSREG,r1		; Clear IRQ
-060002BE 301C                 	add	r1,r0
-060002C0 2001                 	mov.w	r0,@r0
-060002C2 0009                 	nop
-060002C4 0009                 	nop
-060002C6 0009                 	nop
-060002C8                      	
-060002C8 420B                 	jsr	@r2				; Handle IRQ
+060002BC 6033                 	mov	r3,r0				; Check IRQ level
+060002BE E10A                 	mov	#5<<1,r1
+060002C0 3013                 	cmp/ge	r1,r0
+060002C2 8900                 	bt	@IRQDone			; If it's too low, branch
+060002C4                      	
+060002C4 D100                 	mov.l	#VRESINTCLR+SYSREG,r1		; Clear IRQ
+060002C6 301C                 	add	r1,r0
+060002C8 2001                 	mov.w	r0,@r0
 060002CA 0009                 	nop
-060002CC                      
-060002CC                      @IRQDone:
-060002CC 4F26                 	lds.l	@r15+,pr			; Restore registers
-060002CE 4F17                 	ldc.l	@r15+,gbr
-060002D0 6EF6                 	mov.l	@r15+,r14
-060002D2 63F6                 	mov.l	@r15+,r3
-060002D4 62F6                 	mov.l	@r15+,r2
-060002D6 61F6                 	mov.l	@r15+,r1
-060002D8 60F6                 	mov.l	@r15+,r0
-060002DA                      	
-060002DA 002B                 	rte
-060002DC 0009                 	nop
-060002DE                      
-060002E0 0000 0000 0000    +  	lits
-060002F4                      	
-060002F4                      ; ---------------------------------------------------------------------------
-060002F4                      
-060002F4                      @IRQTable:
-060002F4 0000 0000            	dc.l	MasterVRESInt			; VRES interrupt
-060002F8 0000 0000            	dc.l	MasterBlankInt			; V-BLANK interrupt
-060002FC 0000 0000            	dc.l	MasterBlankInt			; H-BLANK interrupt
-06000300 0000 0000            	dc.l	MasterBlankInt			; CMD interrupt
-06000304 0000 0000            	dc.l	MasterBlankInt			; PWM interrupt
-06000308                      
-06000308                      ; ---------------------------------------------------------------------------
-06000308                      ; Master VRES interrupt
-06000308                      ; ---------------------------------------------------------------------------
-06000308                      
-06000308                      MasterVRESInt:
-06000308 DF00                 	mov.l	#MasterStack,r15		; Reset stack pointer
-0600030A                      
-0600030A 9000                 	mov.w	#$F0,r0				; Set return SR
-0600030C 2F05                 	mov.w	r0,@-r15
-0600030E D000                 	mov.l	#MasterHotStart,r0		; Set return address
-06000310 2F06                 	mov.l	r0,@-r15
-06000312                      	
-06000312 E1B0                 	mov.l	#DMAOPER,r1			; Disable DMA
-06000314 E000                 	mov	#0,r0
-06000316 2102                 	mov.l	r0,@r1
-06000318 E18C                 	mov.l	#DMACTRL0,r1
-0600031A 2102                 	mov.l	r0,@r1
-0600031C D000                 	mov.l	#$44E0,r0
+060002CC 0009                 	nop
+060002CE 0009                 	nop
+060002D0                      	
+060002D0 420B                 	jsr	@r2				; Handle IRQ
+060002D2 0009                 	nop
+060002D4                      
+060002D4                      @IRQDone:
+060002D4 4F26                 	lds.l	@r15+,pr			; Restore registers
+060002D6 4F17                 	ldc.l	@r15+,gbr
+060002D8 6EF6                 	mov.l	@r15+,r14
+060002DA 63F6                 	mov.l	@r15+,r3
+060002DC 62F6                 	mov.l	@r15+,r2
+060002DE 61F6                 	mov.l	@r15+,r1
+060002E0 60F6                 	mov.l	@r15+,r0
+060002E2                      	
+060002E2 002B                 	rte
+060002E4 0009                 	nop
+060002E6                      
+060002E8 0000 0000 0000    +  	lits
+060002FC                      	
+060002FC                      ; ---------------------------------------------------------------------------
+060002FC                      
+060002FC                      @IRQTable:
+060002FC 0000 0000            	dc.l	MasterVRESInt			; VRES interrupt
+06000300 0000 0000            	dc.l	MasterBlankInt			; V-BLANK interrupt
+06000304 0000 0000            	dc.l	MasterBlankInt			; H-BLANK interrupt
+06000308 0000 0000            	dc.l	MasterBlankInt			; CMD interrupt
+0600030C 0000 0000            	dc.l	MasterBlankInt			; PWM interrupt
+06000310                      
+06000310                      ; ---------------------------------------------------------------------------
+06000310                      ; Master VRES interrupt
+06000310                      ; ---------------------------------------------------------------------------
+06000310                      
+06000310                      MasterVRESInt:
+06000310 DF00                 	mov.l	#MasterStack,r15		; Reset stack pointer
+06000312                      
+06000312 9000                 	mov.w	#$F0,r0				; Set return SR
+06000314 2F05                 	mov.w	r0,@-r15
+06000316 D000                 	mov.l	#MasterHotStart,r0		; Set return address
+06000318 2F06                 	mov.l	r0,@-r15
+0600031A                      	
+0600031A E1B0                 	mov.l	#DMAOPER,r1			; Disable DMA
+0600031C E000                 	mov	#0,r0
 0600031E 2102                 	mov.l	r0,@r1
-06000320                      
-06000320 002B                 	rte
-06000322 0009                 	nop
-06000324                      	
-06000328 0000 0000 0000    +  	lits
-06000334                      
-06000334                      ; ---------------------------------------------------------------------------
-06000334                      ; Blank interrupt
-06000334                      ; ---------------------------------------------------------------------------
-06000334                      
-06000334                      MasterBlankInt:
-06000334 000B                 	rts
-06000336 0009                 	nop
-06000338                      
-06000338                      ; ---------------------------------------------------------------------------
-06000338                      ; Slave vector table
-06000338                      ; ---------------------------------------------------------------------------
-06000338                      	
+06000320 E18C                 	mov.l	#DMACTRL0,r1
+06000322 2102                 	mov.l	r0,@r1
+06000324 D000                 	mov.l	#$44E0,r0
+06000326 2102                 	mov.l	r0,@r1
+06000328                      
+06000328 002B                 	rte
+0600032A 0009                 	nop
+0600032C                      	
+06000330 0000 0000 0000    +  	lits
+0600033C                      
+0600033C                      ; ---------------------------------------------------------------------------
+0600033C                      ; Blank interrupt
+0600033C                      ; ---------------------------------------------------------------------------
+0600033C                      
+0600033C                      MasterBlankInt:
+0600033C 000B                 	rts
+0600033E 0009                 	nop
+06000340                      
+06000340                      ; ---------------------------------------------------------------------------
+06000340                      ; Slave vector table
+06000340                      ; ---------------------------------------------------------------------------
+06000340                      	
 06000400 0000 0000            	dc.l	SlaveEntry			; Cold start entry
 06000404 0603 F000            	dc.l	SlaveStack			; Cold start stack pointer
 06000408 0000 0000            	dc.l	SlaveEntry			; Hot start entry
@@ -786,53 +792,63 @@
 0600067A C514                 	mov.w	@(COMM8,gbr),r0			; Should we stop?
 0600067C 8800                 	cmp/eq	#0,r0
 0600067E 8B00                 	bf	@Exit				; If so, loop
-06000680                      	
-06000680 D200                 	mov.l	#PWMDataPtr,r2			; Read sample and advance
-06000682 6122                 	mov.l	@r2,r1
-06000684 6310                 	mov.b	@r1,r3
-06000686 633C                 	extu.b	r3,r3
-06000688 4300                 	shll	r3
-0600068A 7101                 	add	#1,r1
-0600068C                      	
-0600068C D000                 	mov.l	#CARTRIDGE+$178000,r0		; Check if about halfway through
-0600068E 3100                 	cmp/eq	r0,r1
-06000690 8900                 	bt	@SwapBanks			; If so, branch
-06000692 D000                 	mov.l	#CARTRIDGE+$1F8000,r0		; Check if near the end
+06000680                      
+06000680                      @WaitRV:
+06000680 C407                 	mov.b	@(DREQCTRL+1,gbr),r0		; Make sure RV is not set
+06000682 C801                 	tst	#1,r0
+06000684 8BFC                 	bf	@WaitRV
+06000686                      	
+06000686 D200                 	mov.l	#PWMDataPtr,r2			; Read sample and advance
+06000688 6122                 	mov.l	@r2,r1
+0600068A 6310                 	mov.b	@r1,r3
+0600068C 633C                 	extu.b	r3,r3
+0600068E 4300                 	shll	r3
+06000690 7101                 	add	#1,r1
+06000692                      	
+06000692 D000                 	mov.l	#CARTRIDGE+$178000,r0		; Check if about halfway through
 06000694 3100                 	cmp/eq	r0,r1
 06000696 8900                 	bt	@SwapBanks			; If so, branch
-06000698 D000                 	mov.l	#CARTRIDGE+$200000,r0		; Check at the end
-0600069A 3103                 	cmp/ge	r0,r1
-0600069C 8B00                 	bf	@SetSample			; If so, branch
-0600069E D100                 	mov.l	#CARTRIDGE+$100000,r1		; Wrap back to the start
-060006A0 A000                 	bra	@SetSample
-060006A2 0009                 	nop
-060006A4                      	
-060006A4                      @SwapBanks:
-060006A4 D000                 	mov.l	#"SWAP",r0			; Tell Genesis to swap PWM banks
-060006A6 C209                 	mov.l	r0,@(COMM4,gbr)
-060006A8                      
-060006A8                      @SetSample:
-060006A8 2212                 	mov.l	r1,@r2				; Update pointer
-060006AA 6033                 	mov	r3,r0				; Set sample
-060006AC C11C                 	mov.w	r0,@(PWMMONO,gbr)
-060006AE                      	
-060006AE C438                 	mov.b	@(PWMMONO,gbr),r0		; Is the PWM FIFO full?
-060006B0 C880                 	tst	#$80,r0
-060006B2 89E2                 	bt	@CopyData			; If not, copy more data
+06000698 D000                 	mov.l	#CARTRIDGE+$1F8000,r0		; Check if near the end
+0600069A 3100                 	cmp/eq	r0,r1
+0600069C 8900                 	bt	@SwapBanks			; If so, branch
+0600069E D000                 	mov.l	#CARTRIDGE+$200000,r0		; Check at the end
+060006A0 3103                 	cmp/ge	r0,r1
+060006A2 8B00                 	bf	@SetSample			; If so, branch
+060006A4 D100                 	mov.l	#CARTRIDGE+$100000,r1		; Wrap back to the start
+060006A6 A000                 	bra	@SetSample
+060006A8 0009                 	nop
+060006AA                      	
+060006AA                      @SwapBanks:
+060006AA D000                 	mov.l	#"SWAP",r0			; Tell Genesis to swap PWM banks
+060006AC C209                 	mov.l	r0,@(COMM4,gbr)
+060006AE                      
+060006AE                      @WaitSwap:
+060006AE C609                 	mov.l	@(COMM4,gbr),r0
+060006B0 8800                 	cmp/eq	#0,r0
+060006B2 8BFC                 	bf	@WaitSwap
 060006B4                      
-060006B4                      @Exit:
-060006B4 000B                 	rts
-060006B6 0009                 	nop
-060006B8                      
-060006B8                      ; ---------------------------------------------------------------------------
-060006B8                      
-060006B8 0000 0000 0000    +  	lits
-060006D0                      
-060006D0                      PWMDataPtr:
-060006D0 0000 0000            	dc.l	0
-060006D4                      
-060006D4                      ; ---------------------------------------------------------------------------
-060006D4                      
-060006D4                      	objend
-060006D4                      
-060006D4                      ; ---------------------------------------------------------------------------
+060006B4                      @SetSample:
+060006B4 2212                 	mov.l	r1,@r2				; Update pointer
+060006B6 6033                 	mov	r3,r0				; Set sample
+060006B8 C11C                 	mov.w	r0,@(PWMMONO,gbr)
+060006BA                      	
+060006BA C438                 	mov.b	@(PWMMONO,gbr),r0		; Is the PWM FIFO full?
+060006BC C880                 	tst	#$80,r0
+060006BE 89DC                 	bt	@CopyData			; If not, copy more data
+060006C0                      
+060006C0                      @Exit:
+060006C0 000B                 	rts
+060006C2 0009                 	nop
+060006C4                      
+060006C4                      ; ---------------------------------------------------------------------------
+060006C4                      
+060006C4 0000 0000 0000    +  	lits
+060006DC                      
+060006DC                      PWMDataPtr:
+060006DC 0000 0000            	dc.l	0
+060006E0                      
+060006E0                      ; ---------------------------------------------------------------------------
+060006E0                      
+060006E0                      	objend
+060006E0                      
+060006E0                      ; ---------------------------------------------------------------------------

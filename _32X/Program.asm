@@ -183,13 +183,19 @@ MasterLoop:
 ; ---------------------------------------------------------------------------
 
 @Continue:
-	shlr	r0				; Copy frame data
+	mov	r0,r4				; Get frame data length in words
+	shlr	r4
 	
 @Copy:
-	mov.w	@r1+,r4
-	mov.w	r4,@r3
+@WaitRV:
+	mov.b	@(DREQCTRL+1,gbr),r0		; Make sure RV is not set
+	tst	#1,r0
+	bf	@WaitRV
+
+	mov.w	@r1+,r0				; Copy frame data
+	mov.w	r0,@r3
 	add	#2,r3
-	dt	r0
+	dt	r4
 	bf	@Copy
 	
 	mov.l	#cartPtr,r0			; Update cartridge pointer
@@ -664,6 +670,11 @@ SlavePWMInt:
 	mov.w	@(COMM8,gbr),r0			; Should we stop?
 	cmp/eq	#0,r0
 	bf	@Exit				; If so, loop
+
+@WaitRV:
+	mov.b	@(DREQCTRL+1,gbr),r0		; Make sure RV is not set
+	tst	#1,r0
+	bf	@WaitRV
 	
 	mov.l	#PWMDataPtr,r2			; Read sample and advance
 	mov.l	@r2,r1
@@ -688,6 +699,11 @@ SlavePWMInt:
 @SwapBanks:
 	mov.l	#"SWAP",r0			; Tell Genesis to swap PWM banks
 	mov.l	r0,@(COMM4,gbr)
+
+@WaitSwap:
+	mov.l	@(COMM4,gbr),r0
+	cmp/eq	#0,r0
+	bf	@WaitSwap
 
 @SetSample:
 	mov.l	r1,@r2				; Update pointer
