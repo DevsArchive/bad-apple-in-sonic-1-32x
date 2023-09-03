@@ -21,6 +21,33 @@ BadAppleInit:
 ; ---------------------------------------------------------------------------
 
 BadAppleUpdate:
+	lea	v_pal_dry.w,a0			; Get background color
+	moveq	#0,d0
+	move.b	_PaletteBG.w,d0
+	move.w	(a0,d0.w),d0
+
+	lea	@PalConv(pc),a0			; Conversion table
+
+	move.w	d0,d1				; Convert red
+	andi.w	#$E,d1
+	move.w	(a0,d1.w),d1
+
+	lsr.w	#4,d0				; Convert green
+	move.w	d0,d2
+	andi.w	#$E,d2
+	move.w	(a0,d2.w),d2
+	lsl.w	#5,d2
+	or.w	d2,d1
+
+	lsr.w	#4,d0				; Convert blue
+	move.w	(a0,d0.w),d0
+	lsl.w	#8,d0
+	add.w	d0,d0
+	add.w	d0,d0
+	or.w	d0,d1
+
+	move.w	d1,MARSSYSREG+MARSCOMMC		; Set "white" color in Bad Apple
+
 	cmpi.l	#"RSET",MARSSYSREG+MARSCOMM0	; Is it time to reset?
 	beq.s	@Reset				; If not, branch
 	cmpi.l	#"BANK",MARSSYSREG+MARSCOMM0	; Is it time to switch to the next bank?
@@ -64,6 +91,11 @@ BadAppleUpdate:
 	move.l	d0,MARSSYSREG+MARSCOMM0
 	move.l	d0,MARSSYSREG+MARSCOMM4
 	rts
+	
+; ---------------------------------------------------------------------------
+
+@PalConv:
+	dc.w	0, 4, 8, $D, $11, $16, $1A, $1F
 
 ; ---------------------------------------------------------------------------
 ; Set mapper bank
@@ -89,7 +121,8 @@ _MapPWMBankID:
 	dc.b	BadApplePWM			; PWM bank ID
 _MapPWMBankCur:
 	dc.b	0				; Current PWM bank
-	even
+_PaletteBG:
+	dc.b	0				; Palette background index
 
 	objend
 SetMapperBankEnd:

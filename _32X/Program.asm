@@ -243,7 +243,10 @@ MasterUpdatePal:
 	mov	#256-1,r0
 	
 @SetPalLoop:
-	mov.w	#$7FFF,r3
+	mov.l	r0,@-r15
+	mov.w	@(COMMC,gbr),r0
+	mov	r0,r3
+	mov.l	@r15+,r0
 	tst	r2,r0
 	bt	@SetColor
 	mov.w	#$8000,r3

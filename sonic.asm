@@ -1958,6 +1958,7 @@ GM_Sega:
 		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
 		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
 		move.w	#$8700,(a6)	; set background colour (palette entry 0)
+		clr.b	_PaletteBG.w
 		move.w	#$8B00,(a6)	; full-screen vertical scrolling
 		clr.b	(f_wtr_state).w
 		
@@ -2046,6 +2047,7 @@ GM_Title:
 		move.w	#$9200,(a6)	; window vertical position
 		move.w	#$8B03,(a6)
 		move.w	#$8720,(a6)	; set background colour (palette line 2, entry 0)
+		move.b	#$40,_PaletteBG.w
 		clr.b	(f_wtr_state).w
 		
 		move.w	(v_vdp_buffer1).w,d0
@@ -2813,6 +2815,7 @@ Level_ClrRam:
 		move.w	#$9001,(a6)		; 64-cell hscroll size
 		move.w	#$8004,(a6)		; 8-colour mode
 		move.w	#$8720,(a6)		; set background colour (line 3; colour 0)
+		move.b	#$40,_PaletteBG.w
 		move.w	#$8A00+223,(v_hbla_hreg).w ; set palette change position (for water)
 		move.w	(v_hbla_hreg).w,(a6)
 		cmpi.b	#id_LZ,(v_zone).w ; is level LZ?
@@ -3750,6 +3753,7 @@ GM_Continue:
 		move.w	d0,vdp_control_port
 		lea	vdp_control_port,a6
 		move.w	#$8700,(a6)	; background colour
+		clr.b	_PaletteBG.w
 		bsr.w	ClearScreen
 
 		lea	(v_objspace).w,a1
@@ -3898,6 +3902,7 @@ GM_Ending:
 		move.w	#$8500+(vram_sprites>>9),(a6) ; set sprite table address
 		move.w	#$9001,(a6)		; 64-cell hscroll size
 		move.w	#$8720,(a6)		; set background colour (line 3; colour 0)
+		move.b	#$40,_PaletteBG.w
 		move.w	#$8A00+223,(v_hbla_hreg).w ; set palette change position (for water)
 		move.w	(v_hbla_hreg).w,(a6)
 		move.w	#30,(v_air).w
@@ -4111,6 +4116,7 @@ GM_Credits:
 		move.w	#$9200,(a6)		; window vertical position
 		move.w	#$8B03,(a6)		; line scroll mode
 		move.w	#$8720,(a6)		; set background colour (line 3; colour 0)
+		move.b	#$40,_PaletteBG.w
 		clr.b	(f_wtr_state).w
 		
 		move.w	(v_vdp_buffer1).w,d0
@@ -4250,6 +4256,7 @@ TryAgainEnd:
 		move.w	#$9200,(a6)	; window vertical position
 		move.w	#$8B03,(a6)	; line scroll mode
 		move.w	#$8720,(a6)	; set background colour (line 3; colour 0)
+		move.b	#$40,_PaletteBG.w
 		clr.b	(f_wtr_state).w
 		bsr.w	ClearScreen
 
